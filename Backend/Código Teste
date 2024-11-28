@@ -1,0 +1,37 @@
+import sqlite3
+import matplotlib.pyplot as plt
+
+con = sqlite3.connect('Dados_Pessoais.db')
+cursor = con.cursor()
+
+cursor.execute('''
+    SELECT nome, idade FROM Dados_Pessoais 
+    WHERE idade BETWEEN 20 AND 35 
+    ORDER BY idade ASC;
+''')
+
+resultados = cursor.fetchall()
+contador = len(resultados)
+
+for dados in resultados:
+    print(dados)
+
+print(f'Total de resultados: {contador}')
+
+nome = [dados[0] for dados in resultados] 
+idade = [dados[1] for dados in resultados] 
+
+plt.figure(figsize=(10, 5)) 
+plt.bar(nome, idade, color='blue')
+
+plt.title('Idade das Pessoas entre 20 e 35 Anos')
+plt.xlabel('Nome')
+plt.ylabel('Idade')
+
+plt.xticks(rotation=45, ha='right')
+
+plt.tight_layout()
+
+plt.show()
+
+con.commit()
