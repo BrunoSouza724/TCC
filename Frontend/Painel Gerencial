@@ -1,0 +1,10 @@
+import streamlit as st
+
+st.title('Seja-Bem Vindo ao Controle Financeiro')
+
+st.sidebar.title('Opções')
+
+st.sidebar.header('Entrada e Saída')
+st.sidebar.header('Demonstrações Financeiras')
+st.sidebar.header('Resumo Financeiro')
+
