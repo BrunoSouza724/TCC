@@ -32,7 +32,7 @@ def mostrar_login():
         st.subheader("Acessar Conta")
         username = st.text_input("Usuário", placeholder="Digite seu usuário")
         password = st.text_input("Senha", type="password", placeholder="Digite sua senha")
-
+ 
         if st.button("Login"):
             if username and password:
                 if verificar_login(username, password):
@@ -44,7 +44,7 @@ def mostrar_login():
 
                     # Exibe mensagem e inicia o app principal
                     st.success(f"Login bem-sucedido! Bem-vindo(a), {username}!")
-                    try:
+                    try: #O erro está aqui, verificar
                         subprocess.Popen(["streamlit", "run", app_path])
                         st.write("O aplicativo principal foi iniciado em uma nova aba.")
                         st.markdown(
@@ -54,7 +54,7 @@ def mostrar_login():
                             </script>
                             """,
                             unsafe_allow_html=True
-                        )
+                        ) #Erro
                     except Exception as e:
                         st.error(f"Erro ao abrir a tela principal: {e}")
                 else:
