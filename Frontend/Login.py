@@ -1,9 +1,8 @@
 import streamlit as st
-import subprocess
-import os
+import app  
 
 # Simula um banco de dados em memória (use um banco real em produção)
-user_db = {"admin": "1234"}  
+user_db = {"admin": "1234"}
 
 # Função para verificar login
 def verificar_login(username, password):
@@ -21,7 +20,7 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.username = None
 
-# Interface principal
+# Interface de login e criação de conta
 def mostrar_login():
     st.title("Tela de Login")
 
@@ -30,33 +29,14 @@ def mostrar_login():
 
     if menu == "Login":
         st.subheader("Acessar Conta")
-        username = st.text_input("Usuário", placeholder="Digite seu usuário")
-        password = st.text_input("Senha", type="password", placeholder="Digite sua senha")
- 
+        username = st.text_input("Usuário", placeholder="Digite seu usuário", key="login_user")
+        password = st.text_input("Senha", type="password", placeholder="Digite sua senha", key="login_pass")
+
         if st.button("Login"):
             if username and password:
                 if verificar_login(username, password):
                     st.session_state.logged_in = True
                     st.session_state.username = username
-
-                    # Caminho absoluto do arquivo app.py
-                    app_path = os.path.abspath("app.py")
-
-                    # Exibe mensagem e inicia o app principal
-                    st.success(f"Login bem-sucedido! Bem-vindo(a), {username}!")
-                    try: #O erro está aqui, verificar
-                        subprocess.Popen(["streamlit", "run", app_path])
-                        st.write("O aplicativo principal foi iniciado em uma nova aba.")
-                        st.markdown(
-                            """
-                            <script>
-                                window.close();
-                            </script>
-                            """,
-                            unsafe_allow_html=True
-                        ) #Erro
-                    except Exception as e:
-                        st.error(f"Erro ao abrir a tela principal: {e}")
                 else:
                     st.error("Usuário ou senha incorretos.")
             else:
@@ -64,8 +44,8 @@ def mostrar_login():
 
     elif menu == "Criar Conta":
         st.subheader("Criar Nova Conta")
-        new_username = st.text_input("Novo Usuário", placeholder="Digite um nome de usuário")
-        new_password = st.text_input("Nova Senha", type="password", placeholder="Digite uma senha")
+        new_username = st.text_input("Novo Usuário", placeholder="Digite um nome de usuário", key="create_user")
+        new_password = st.text_input("Nova Senha", type="password", placeholder="Digite uma senha", key="create_pass")
 
         if st.button("Criar Conta"):
             if new_username and new_password:
@@ -76,10 +56,20 @@ def mostrar_login():
             else:
                 st.warning("Por favor, preencha todos os campos.")
 
-# Lógica de fluxo
+# Função de logout
+def logout():
+    st.session_state.logged_in = False
+    st.session_state.username = None
+
+# Lógica principal
 if st.session_state.logged_in:
-    # Substitui o conteúdo da página de login
-    st.write("Você já está logado. O aplicativo principal foi aberto em outra aba.")
+    # Substitui a tela de login pelo app principal
+    st.write(f"Bem-vindo, {st.session_state.username}!")
+    if st.button("Logout"):
+        logout()
+        st.experimental_rerun() 
+    else:
+        # Chama a função principal do app importado
+        app.main()  
 else:
-    # Mostra a tela de login
     mostrar_login()
