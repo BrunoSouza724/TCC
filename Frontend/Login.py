@@ -15,6 +15,8 @@ def tela_principal():
         # Limpa o estado de sessão ao fazer logout
         st.session_state.logged_in = False
         st.session_state.username = None
+        # Força a reexecução do app
+        st.rerun()
     else:
         # Chama o app principal
         app.main()
@@ -34,7 +36,8 @@ def tela_login():
                     st.session_state.logged_in = True
                     st.session_state.username = username
                     st.success(f"Bem-vindo, {st.session_state.username}!")
-                    return  # Força o ciclo a sair da tela de login
+                    # Força a reexecução após login bem-sucedido
+                    st.rerun()
                 else:
                     st.error("Usuário ou senha incorretos.")
             else:
@@ -51,3 +54,4 @@ if st.session_state.logged_in:
     tela_principal()
 else:
     tela_login()
+
