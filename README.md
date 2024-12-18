@@ -2,4 +2,4 @@
 Códigos do TCC 
 
 # Requirements
-Streamlit
+pip install streamlit   
