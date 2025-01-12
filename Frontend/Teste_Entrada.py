@@ -1,23 +1,31 @@
 import streamlit as st
 
 def Teste_Entrada():
-    st.title("Cadastro de Transações")
+    st.title(':credit_card: Entrada e Saída')
 
     # Inicializar valores no session_state apenas na primeira execução
     if "formulario_visivel" not in st.session_state:
         st.session_state.formulario_visivel = True
         st.session_state.salvo = False
-        st.session_state.tipo = "Entrada"
-        st.session_state.data = None
-        st.session_state.data_recebimento_pagamento = None
-        st.session_state.descricao = []
-        st.session_state.valor = 0.0
-        st.session_state.metodo = "Dinheiro"
+
+        # Inicializar valores padrão
+        if "tipo" not in st.session_state:
+            st.session_state.tipo = "Entrada"
+        if "data" not in st.session_state:
+            st.session_state.data = None
+        if "data_recebimento_pagamento" not in st.session_state:
+            st.session_state.data_recebimento_pagamento = None
+        if "descricao" not in st.session_state:
+            st.session_state.descricao = []
+        if "valor" not in st.session_state:
+            st.session_state.valor = 0.0
+        if "metodo" not in st.session_state:
+            st.session_state.metodo = "Dinheiro"
 
     # Se o formulário estiver visível
     if st.session_state.formulario_visivel:
         # Tipo: Entrada ou Saída
-        st.session_state.tipo = st.radio(
+        st.radio(
             "Tipo de transação:", 
             ["Entrada", "Saída"], 
             horizontal=True, 
@@ -25,19 +33,19 @@ def Teste_Entrada():
         )
 
         # Data
-        st.session_state.data = st.date_input(
+        st.date_input(
             "Data da transação:", 
             key="data"
         )
 
         # Data de Recebimento/Pagamento
-        st.session_state.data_recebimento_pagamento = st.date_input(
+        st.date_input(
             "Data de Recebimento/Pagamento:", 
             key="data_recebimento_pagamento"
         )
 
         # Descrição
-        st.session_state.descricao = st.multiselect(
+        st.multiselect(
             "Descrição (Selecione um ou mais itens):", 
             ["Caneta", "Lápis", "Caderno"], 
             default=st.session_state.descricao, 
@@ -45,7 +53,7 @@ def Teste_Entrada():
         )
 
         # Valor
-        st.session_state.valor = st.number_input(
+        st.number_input(
             "Valor da transação:", 
             min_value=0.0, 
             step=0.01, 
@@ -54,7 +62,7 @@ def Teste_Entrada():
         )
 
         # Método de pagamento
-        st.session_state.metodo = st.selectbox(
+        st.selectbox(
             "Método de pagamento:", 
             ["Dinheiro", "Cartão de Crédito", "Cartão de Débito"], 
             key="metodo"
@@ -81,6 +89,3 @@ def Teste_Entrada():
         if st.button("Nova transação"):
             st.session_state.formulario_visivel = True  # Mostra o formulário novamente
             st.session_state.salvo = False
-
-
-
