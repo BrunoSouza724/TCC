@@ -12,26 +12,29 @@ def main():
         st.title('Selecione uma opção')
 
         # Botão para navegar para a tela de entrada/saída
-        if st.button(':credit_card: Entrada e Saída'):
-            st.session_state.tela_atual = "entrada_saida"
+        st.button(':credit_card: Entrada e Saída', on_click=lambda: mudar_tela("entrada_saida"))
 
         # Outras opções
-        if st.button(':chart: Demonstrações Financeiras'):
-            st.info("Funcionalidade em desenvolvimento!")
-
-        if st.button(':moneybag: Resumo Financeiro'):
-            st.info("Funcionalidade em desenvolvimento!")
+        st.button(':chart: Demonstrações Financeiras', on_click=lambda: st.info("Funcionalidade em desenvolvimento!"))
+        st.button(':moneybag: Resumo Financeiro', on_click=lambda: st.info("Funcionalidade em desenvolvimento!"))
 
         # Barra lateral
         st.sidebar.image('Logo.png')
         st.sidebar.title(
-            'Seja-Bem Vindo ao Controle Financeiro :heavy_dollar_sign:')
+            'Seja-Bem Vindo ao Controle Financeiro :heavy_dollar_sign:'
+        )
 
     elif st.session_state.tela_atual == "entrada_saida":
         # Chama o componente de entrada e saída
         Teste_Entrada()
-        if st.button("Voltar para o menu"):
-            st.session_state.tela_atual = "menu"
+
+        # Botão único para voltar ao menu principal
+        st.button("Voltar para o menu", on_click=lambda: mudar_tela("menu"))
+
+
+def mudar_tela(tela):
+    """Função para atualizar a tela atual."""
+    st.session_state.tela_atual = tela
 
 
 if __name__ == "__main__":
