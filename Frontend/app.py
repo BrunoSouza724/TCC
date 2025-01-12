@@ -1,12 +1,16 @@
 import streamlit as st
 
 def main():
-    st.title('Seja-Bem Vindo ao Controle Financeiro :heavy_dollar_sign:')
-
-    st.sidebar.title('Opções')
-    st.sidebar.header(':credit_card: Entrada e Saída')
-    st.sidebar.header(':chart: Demonstrações Financeiras')
-    st.sidebar.header(':moneybag: Resumo Financeiro')
-
+    st.title('Selecione uma opção')
+    container = st.container(border=True)
+    container.write(':credit_card: Entrada e Saída')
+    container = st.container(border=True)
+    container.write(':chart: Demonstrações Financeiras')
+    container = st.container(border=True)
+    container.write(':moneybag: Resumo Financeiro')
+    
+    st.sidebar.image('Logo.png')
+    st.sidebar.title('Seja-Bem Vindo ao Controle Financeiro :heavy_dollar_sign:')
+   
 if __name__ == "__main__":
     main()
