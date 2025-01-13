@@ -1,9 +1,14 @@
 import streamlit as st
+import sqlite3
+
+# Conexão com o banco de dados
+def conectar_banco():
+    return sqlite3.connect('Lancamentos.db')
 
 def Teste_Entrada():
     st.title(':credit_card: Entrada e Saída')
 
-    # Inicializar valores no session_state na primeira execução
+    # Inicializar valores no session_state apenas na primeira execução
     if "formulario_visivel" not in st.session_state:
         st.session_state.formulario_visivel = True
     if "salvo" not in st.session_state:
@@ -16,6 +21,30 @@ def Teste_Entrada():
     # Funções para gerenciar os botões
     def salvar_transacao():
         if st.session_state.dados_transacao["descricao"]:
+            # Inserir os dados no banco
+            try:
+                con = conectar_banco()
+                cursor = con.cursor()
+                dados = st.session_state.dados_transacao
+                cursor.execute(
+                    'INSERT INTO Lancamentos (Tipo, Data, Data_recebimento, Descricao, Valor, Metodo) VALUES (?, ?, ?, ?, ?, ?)',
+                    (
+                        dados["tipo"],
+                        dados["data"],
+                        dados["data_recebimento_pagamento"],
+                        ', '.join(dados["descricao"]),
+                        dados["valor"],
+                        dados["metodo"],
+                    )
+                )
+                con.commit()
+                st.success("Transação salva no banco de dados com sucesso!")
+            except sqlite3.Error as e:
+                st.error(f"Erro ao salvar no banco de dados: {e}")
+            finally:
+                con.close()
+            
+            # Atualizar o estado
             st.session_state.formulario_visivel = False
             st.session_state.salvo = True
         else:
@@ -28,6 +57,10 @@ def Teste_Entrada():
 
     def voltar_menu():
         st.session_state.tela_atual = "menu"
+
+    # Barra lateral
+    st.sidebar.image('Logo.png')
+    st.sidebar.title('Seja-Bem Vindo ao Controle Financeiro :heavy_dollar_sign:')
 
     # Controle da navegação
     if st.session_state.tela_atual == "entrada_saida":
@@ -67,9 +100,3 @@ def Teste_Entrada():
 
             # Botão para iniciar uma nova transação
             st.button("Nova transação", on_click=nova_transacao)
-
-             # Barra lateral
-        st.sidebar.image('Logo.png')
-        st.sidebar.title(
-            'Seja-Bem Vindo ao Controle Financeiro :heavy_dollar_sign:'
-        )
