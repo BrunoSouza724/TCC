@@ -1,4 +1,4 @@
 # FINAN MANAGER
-Projeto de sistema de gestão financeira
+Projeto de sistema de gestão a pagar
 # Requirements
 pip install streamlit   
