@@ -1,87 +1,82 @@
 import streamlit as st
 import pandas as pd
 import datetime
-from sqlalchemy import create_engine
+import sqlite3
 
-# -------------------------------------
-# Configuração da Conexão com o Banco
-# Ajuste de acordo com seu SGBD e credenciais
-# Exemplo para MySQL:
-# engine = create_engine("mysql+pymysql://usuario:senha@host:porta/banco")
-# -------------------------------------
-engine = None  # Remover essa linha e substituir pela sua engine real
+# Barra lateral
+st.sidebar.image('Logo.png')
+st.sidebar.title('Seja-Bem Vindo ao Controle Financeiro :heavy_dollar_sign:')
 
-# Título do aplicativo
+# Função para conexão com o banco de dados SQLite
+def conectar_banco():
+    return sqlite3.connect('Lancamentos.db')
+
 st.title("Dashboard - Demonstrações Financeiras")
 
-# -------------------------------------
-# Seção Superior com 3 colunas
-# -------------------------------------
-col1, col2, col3 = st.columns(3)
 
-with col1:
-    data_selecionada = st.date_input("Data", datetime.date.today())
+# Criação das colunas para os filtros
+data, descricao, entrada_saida = st.columns(3)
 
-with col2:
+#Botão de Data
+with data:
+    periodo_selecionado = st.date_input(
+        "Data",
+        value=(datetime.date(2025, 1, 1), datetime.date(2025, 1, 20))
+    )
+    if isinstance(periodo_selecionado, tuple) and len(periodo_selecionado) == 2:
+        start_date, end_date = periodo_selecionado
+    else:
+        start_date = periodo_selecionado
+        end_date = periodo_selecionado
+
+with descricao:
     opcoes_dados = ["coluna1", "coluna2", "coluna3"]
     dado_selecionado = st.selectbox("Selecione o dado desejado", opcoes_dados)
 
-with col3:
-    # Incluímos "Ambas" como uma terceira opção
+with entrada_saida:
     tipo_transacao = st.radio("Entrada, Saída ou Ambas", ("Entrada", "Saída", "Ambas"))
 
-# -------------------------------------
-# Botão de busca
-# -------------------------------------
+# Botão para buscar dados
 if st.button("Buscar Dados"):
-    # Monta a query de acordo com a opção de transação escolhida
     if tipo_transacao == "Ambas":
-        # Não filtra por transação
         query = f"""
             SELECT *
-            FROM sua_tabela
-            WHERE DATE(data) = '{data_selecionada}'
+            FROM Lancamentos.db
+            WHERE data BETWEEN '{start_date}' AND '{end_date}'
               AND {dado_selecionado} IS NOT NULL
         """
     else:
-        # Filtra pelo tipo de transação escolhido
         query = f"""
             SELECT *
-            FROM sua_tabela
-            WHERE DATE(data) = '{data_selecionada}'
+            FROM Lancamentos.db
+            WHERE data BETWEEN '{start_date}' AND '{end_date}'
               AND {dado_selecionado} IS NOT NULL
               AND transacao = '{tipo_transacao}'
         """
 
-    # Executa a consulta
-    if engine is not None:
-        try:
-            df = pd.read_sql(query, engine)
-        except Exception as e:
-            st.error(f"Erro ao consultar o banco de dados: {e}")
-            df = pd.DataFrame()
-    else:
-        st.warning("Engine de conexão não configurada. Substitua 'engine' pela sua conexão real.")
+    # Conecta ao banco e executa a query
+    conn = conectar_banco()
+    try:
+        df = pd.read_sql_query(query, conn)
+    except Exception as e:
+        st.error(f"Erro ao consultar o banco de dados: {e}")
         df = pd.DataFrame()
+    finally:
+        conn.close()
 
-    # -------------------------------------
-    # Seção Inferior com 2 colunas
-    # -------------------------------------
+    # Exibe os resultados em duas colunas
     col_esq, col_dir = st.columns(2)
 
     with col_esq:
         st.subheader("Todo – D-0 (Coluna Esquerda)")
         if not df.empty:
-            # Filtrar ou exibir dados específicos nesta coluna
-            st.dataframe(df.head())  # Exemplo: exibe apenas as 5 primeiras linhas
+            st.dataframe(df.head())  # Exemplo: exibe as 5 primeiras linhas
         else:
-            st.info("Nenhum dado retornado ou engine não configurada.")
+            st.info("Nenhum dado retornado ou erro na consulta.")
 
     with col_dir:
         st.subheader("Todo – D-0 (Coluna Direita)")
         if not df.empty:
-            # Outro filtro ou visualização diferente
             st.dataframe(df.tail())  # Exemplo: exibe as 5 últimas linhas
         else:
-            st.info("Nenhum dado retornado ou engine não configurada.")
-
+            st.info("Nenhum dado retornado ou erro na consulta.")
