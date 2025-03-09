@@ -13,6 +13,8 @@ def conectar_banco():
 
 st.title("Dashboard - Demonstrações Financeiras")
 
+def voltar_menu():
+        st.session_state.tela_atual = "menu"
 
 # Criação das colunas para os filtros
 data, descricao, entrada_saida = st.columns(3)
@@ -28,6 +30,9 @@ with data:
     else:
         start_date = periodo_selecionado
         end_date = periodo_selecionado
+
+if st.button("Voltar ao Menu"):
+        voltar_menu()        
 
 with descricao:
     opcoes_dados = ["coluna1", "coluna2", "coluna3"]
@@ -80,3 +85,4 @@ if st.button("Buscar Dados"):
             st.dataframe(df.tail())  # Exemplo: exibe as 5 últimas linhas
         else:
             st.info("Nenhum dado retornado ou erro na consulta.")
+
