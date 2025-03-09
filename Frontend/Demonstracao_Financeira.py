@@ -56,14 +56,14 @@ def main():
 
         if tipo_transacao == "Ambas":
             query = f"""
-                SELECT *
+                SELECT Tipo, Data, Data_recebimento, Valor, Metodo
                 FROM Lancamentos
                 WHERE Data BETWEEN '{start_date}' AND '{end_date}'
                 {descricao_filter}
             """
         else:
             query = f"""
-                SELECT *
+                SELECT Tipo, Data, Data_recebimento, Valor, Metodo
                 FROM Lancamentos
                 WHERE Data BETWEEN '{start_date}' AND '{end_date}'
                 {descricao_filter}
@@ -80,23 +80,12 @@ def main():
         finally:
             conn.close()
 
-        # Exibe os resultados em duas colunas
-        col_esq, col_dir = st.columns(2)
-
-        with col_esq:
-            st.subheader("Todo – D-0 (Coluna Esquerda)")
-            if not df.empty:
-                st.dataframe(df.head())  # Exemplo: exibe as 5 primeiras linhas
-            else:
-                st.info("Nenhum dado retornado ou erro na consulta.")
-
-        with col_dir:
-            st.subheader("Todo – D-0 (Coluna Direita)")
-            if not df.empty:
-                st.dataframe(df.tail())  # Exemplo: exibe as 5 últimas linhas
-            else:
-                st.info("Nenhum dado retornado ou erro na consulta.")
+        # Exibe os resultados centralizados
+        st.subheader("Resultados da Consulta")
+        if not df.empty:
+            st.dataframe(df)  # Exibe todos os resultados em uma única tabela centralizada
+        else:
+            st.info("Nenhum dado retornado ou erro na consulta.")
 
 if __name__ == "__main__":
     main()
-    
