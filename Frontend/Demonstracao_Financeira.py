@@ -10,7 +10,7 @@ def main():
     st.sidebar.image('Logo.png')
     st.sidebar.title('Seja-Bem Vindo ao Controle Financeiro :heavy_dollar_sign:')
 
-    st.title("Dashboard - Demonstrações Financeiras")
+    st.title("Demonstrações Financeiras")
 
     def voltar_menu():
         st.session_state.tela_atual = "menu"
