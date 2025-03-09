@@ -1,6 +1,6 @@
 import streamlit as st
 from Teste_Entrada import Teste_Entrada
-
+from Demonstracao_Financeira import main as demonstracao_financeira_main
 
 def main():
     # Inicializar a variável de estado na primeira execução
@@ -14,8 +14,9 @@ def main():
         # Botão para navegar para a tela de entrada/saída
         st.button(':credit_card: Entrada e Saída', on_click=lambda: mudar_tela("entrada_saida"))
 
-        # Outras opções
-        st.button(':chart: Demonstrações Financeiras', on_click=lambda: st.info("Funcionalidade em desenvolvimento!"))
+        # Chama a tela de Demonstrações Financeiras
+        st.button(':chart: Demonstrações Financeiras', on_click=lambda: mudar_tela("demonstracao_financeira"))
+        
         st.button(':moneybag: Resumo Financeiro', on_click=lambda: st.info("Funcionalidade em desenvolvimento!"))
 
         # Barra lateral
@@ -30,12 +31,17 @@ def main():
 
         # Botão único para voltar ao menu principal
         st.button("Voltar para o menu", on_click=lambda: mudar_tela("menu"))
-
+    
+    elif st.session_state.tela_atual == "demonstracao_financeira":
+        # Chama o módulo de Demonstração Financeira
+        demonstracao_financeira_main()
+        
+        # Botão único para voltar ao menu principal
+        st.button("Voltar para o menu", on_click=lambda: mudar_tela("menu"))
 
 def mudar_tela(tela):
     """Função para atualizar a tela atual."""
     st.session_state.tela_atual = tela
-
 
 if __name__ == "__main__":
     main()
