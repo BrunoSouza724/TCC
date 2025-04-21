@@ -18,6 +18,7 @@ def carregar_dados(start_date, end_date, descricao, tipo_transacao):
             FROM Lancamentos
             WHERE Data BETWEEN '{start_date}' AND '{end_date}'
             {descricao_filter} {tipo_filter}
+            ORDER BY Data
         """
 
         df = pd.read_sql_query(query, conn)
@@ -29,16 +30,40 @@ def carregar_dados(start_date, end_date, descricao, tipo_transacao):
 
     return df
 
+def calcular_saldo_acumulado(df):
+    # Criar uma cópia para não modificar o DataFrame original
+    df_saldo = df.copy()
+    
+    # Converter valores de saída para negativos
+    df_saldo['Valor'] = df_saldo.apply(
+        lambda row: -row['Valor'] if row['Tipo'] == 'Saída' else row['Valor'], 
+        axis=1
+    )
+    
+    # Calcular o saldo acumulado por data
+    df_saldo = df_saldo.groupby('Data', as_index=False).agg({'Valor': 'sum'})
+    df_saldo['Saldo Acumulado'] = df_saldo['Valor'].cumsum()
+    
+    return df_saldo
+
 def exibir_graficos(df):
     if not df.empty:
         df['Data'] = pd.to_datetime(df['Data'])
         
-        # Gráfico de barras - Valor por Descrição
-        fig_bar = px.bar(df, x='Descricao', y='Valor', color='Tipo', title="Valor por Descrição")
+        # Gráfico de barras - Valor por Descrição (mantido original)
+        fig_bar = px.bar(df, x='Descricao', y='Valor', color='Tipo', 
+                         title="Valor por Descrição")
         st.plotly_chart(fig_bar)
         
-        # Gráfico de linha - Evolução Financeira
-        fig_line = px.line(df, x='Data', y='Valor', color='Tipo', markers=True, title="Evolução Financeira")
+        # Gráfico de linha - Evolução Financeira (agora com saldo acumulado)
+        df_saldo = calcular_saldo_acumulado(df)
+        fig_line = px.line(df_saldo, x='Data', y='Saldo Acumulado', 
+                           markers=True, title="Evolução do Saldo Financeiro",
+                           labels={'Saldo Acumulado': 'Saldo (R$)'})
+        
+        # Adicionar linha horizontal no zero para referência
+        fig_line.add_hline(y=0, line_dash="dash", line_color="red")
+        
         st.plotly_chart(fig_line)
     else:
         st.info("Nenhum dado disponível para os filtros selecionados.")
@@ -54,7 +79,8 @@ def main():
     
     with data:
         periodo_selecionado = st.date_input("Data", value=(datetime.date(2025, 1, 1), datetime.date(2025, 1, 20)))
-        start_date, end_date = (periodo_selecionado if isinstance(periodo_selecionado, tuple) else (periodo_selecionado, periodo_selecionado))
+        start_date, end_date = (periodo_selecionado if isinstance(periodo_selecionado, tuple) 
+                              else (periodo_selecionado, periodo_selecionado))
     
     with descricao:
         conn = conectar_banco()
@@ -75,11 +101,6 @@ def main():
     if st.button("Gerar Gráficos"):
         df = carregar_dados(start_date, end_date, dado_selecionado, tipo_transacao)
         exibir_graficos(df)
-
-
-def mudar_tela(tela):
-    """Função para atualizar a tela atual."""
-    st.session_state.tela_atual = tela
 
 if __name__ == "__main__":
     main()
