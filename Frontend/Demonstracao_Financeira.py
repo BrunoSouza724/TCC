@@ -56,14 +56,14 @@ def main():
 
         if tipo_transacao == "Ambas":
             query = f"""
-                SELECT Tipo, Data, Data_recebimento, Descricao, Valor, Metodo
+                SELECT Tipo, Data, Descricao, Valor, Metodo
                 FROM Lancamentos
                 WHERE Data BETWEEN '{start_date}' AND '{end_date}'
                 {descricao_filter}
             """
         else:
             query = f"""
-                SELECT Tipo, Data, Data_recebimento, Descricao, Valor, Metodo
+                SELECT Tipo, Data, Descricao, Valor, Metodo
                 FROM Lancamentos
                 WHERE Data BETWEEN '{start_date}' AND '{end_date}'
                 {descricao_filter}
