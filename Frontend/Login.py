@@ -14,35 +14,48 @@ def aplicar_tema():
     st.markdown("""
     <style>
         :root {
-            --primary: #0C1D26;
-            --secondary: #1A3A4B;
-            --accent: #4EBEBD;
-            --text: #FFFFFF;
+            --primary: #FFFFFF;       /* Fundo branco */
+            --secondary: #F8F8F8;     /* Cinza muito claro */
+            --accent: #2E8B57;        /* Verde floresta (principal) */
+            --text: #333333;          /* Texto escuro */
+            --border: #2E8B57;        /* Borda verde */
         }
-        .stApp {
+        
+        /* Quadro do login */
+        [data-testid="stForm"] {
             background-color: var(--primary);
-            color: var(--text);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(46, 139, 87, 0.1); /* Sombra sutil verde */
         }
-        .stTextInput>div>div>input, .stPassword>div>div>input {
-            background-color: var(--secondary) !important;
-            color: var(--text) !important;
-            border-radius: 8px;
-        }
+        
+        /* Botões */
         .stButton>button {
             background-color: var(--accent) !important;
-            color: var(--primary) !important;
-            border-radius: 8px;
-            font-weight: bold;
+            color: white !important;
+            border: none;
+            transition: all 0.3s;
         }
-        [data-testid="stForm"] {
-            background-color: var(--secondary);
-            padding: 20px;
-            border-radius: 10px;
+        .stButton>button:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+        
+        /* Inputs */
+        .stTextInput>div>div>input,
+        .stPassword>div>div>input {
+            background-color: var(--secondary) !important;
+            border: 1px solid var(--border) !important;
+        }
+        
+        /* Título do formulário */
+        h3 {
+            color: var(--accent) !important;
         }
     </style>
     """, unsafe_allow_html=True)
-
-
+    
 def tela_login():
     """Tela de login estilizada"""
     col1, col2, col3 = st.columns([1,3,1])
