@@ -1,7 +1,7 @@
 import streamlit as st
 import app 
 
-# Simulação de um "banco" de usuários
+# Entrada no site
 user_db = {"admin": "1234"}  
 
 # Função para verificar login
@@ -14,54 +14,53 @@ def aplicar_tema():
     st.markdown("""
     <style>
         :root {
-            --primary: #FFFFFF;       /* Fundo branco */
-            --secondary: #F8F8F8;     /* Cinza muito claro */
-            --accent: #2E8B57;        /* Verde floresta (principal) */
+            --primary: #FFFFFF;       /* Fundo branco da página */
+            --secondary: #E8F5E9;     /* Verde MUITO claro (fundo do quadro) */
+            --accent: #2E8B57;        /* Verde floresta (botões/bordas) */
             --text: #333333;          /* Texto escuro */
-            --border: #2E8B57;        /* Borda verde */
         }
         
-        /* Quadro do login */
+        /* Quadro do login - AGORA COM FUNDO VERDE CLARO */
         [data-testid="stForm"] {
-            background-color: var(--primary);
-            border: 2px solid var(--border);
+            background-color: var(--secondary) !important;  /* Verde claro */
+            border: 2px solid var(--accent) !important;    /* Borda verde floresta */
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 4px 12px rgba(46, 139, 87, 0.1); /* Sombra sutil verde */
+            box-shadow: 0 4px 12px rgba(46, 139, 87, 0.15);
         }
         
-        /* Botões */
+        /* Inputs - Estilo harmonizado */
+        .stTextInput>div>div>input,
+        .stPassword>div>div>input {
+            background-color: white !important;
+            border: 1px solid var(--accent) !important;
+            border-radius: 6px;
+        }
+        
+        /* Botões - Destaque */
         .stButton>button {
             background-color: var(--accent) !important;
             color: white !important;
-            border: none;
-            transition: all 0.3s;
-        }
-        .stButton>button:hover {
-            opacity: 0.9;
-            transform: scale(1.02);
-        }
-        
-        /* Inputs */
-        .stTextInput>div>div>input,
-        .stPassword>div>div>input {
-            background-color: var(--secondary) !important;
-            border: 1px solid var(--border) !important;
+            font-weight: bold;
+            border-radius: 6px;
         }
         
         /* Título do formulário */
         h3 {
             color: var(--accent) !important;
+            margin-bottom: 20px;
         }
     </style>
     """, unsafe_allow_html=True)
+
     
 def tela_login():
-    """Tela de login estilizada"""
     col1, col2, col3 = st.columns([1,3,1])
     with col2:
-        st.image("Logo.png", width=200)  # Sua logo
-        st.markdown("<h1 style='text-align: center;'>Controle Financeiro</h1>", unsafe_allow_html=True)
+
+        # Título centralizado
+        st.markdown("<h1 style='text-align: center; color: #2E8B57;'>Login</h1>", 
+                   unsafe_allow_html=True)
         
         with st.form("login_form"):
             username = st.text_input("Usuário", placeholder="Digite seu usuário")
