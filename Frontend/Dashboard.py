@@ -50,20 +50,24 @@ def exibir_graficos(df):
     if not df.empty:
         df['Data'] = pd.to_datetime(df['Data'])
         
-        # Gráfico de barras - Valor por Descrição (mantido original)
+        # Gráfico de barras - Valor por Descrição (com cor personalizada)
         fig_bar = px.bar(df, x='Descricao', y='Valor', color='Tipo', 
-                         title="Valor por Descrição")
+                         title="Valor por Descrição", 
+                         color_discrete_sequence=["#2E8B57"])  # Cor personalizada
         st.plotly_chart(fig_bar)
         
-        # Gráfico de linha - Evolução Financeira (agora com saldo acumulado)
+        # Gráfico de linha - Evolução Financeira (agora com saldo acumulado e cor personalizada)
         df_saldo = calcular_saldo_acumulado(df)
         fig_line = px.line(df_saldo, x='Data', y='Saldo Acumulado', 
                            markers=True, title="Evolução do Saldo Financeiro",
-                           labels={'Saldo Acumulado': 'Saldo (R$)'})
+                           labels={'Saldo Acumulado': 'Saldo (R$)'},
+                           line_shape="linear")
         
         # Adicionar linha horizontal no zero para referência
         fig_line.add_hline(y=0, line_dash="dash", line_color="red")
         
+        # Definir a cor da linha
+        fig_line.update_traces(line=dict(color="#2E8B57"))  # Cor personalizada para a linha
         st.plotly_chart(fig_line)
     else:
         st.info("Nenhum dado disponível para os filtros selecionados.")
@@ -72,13 +76,17 @@ def main():
     st.sidebar.image('Logo.png')
     st.sidebar.title('Seja-Bem Vindo ao Controle Financeiro :heavy_dollar_sign:')
     
-    st.title("Dashboard - Análise Financeira")
+    st.title(":moneybag: Resumo Financeiro")
     
     # Filtros
     data, descricao, entrada_saida = st.columns(3)
     
     with data:
-        periodo_selecionado = st.date_input("Data", value=(datetime.date(2025, 1, 1), datetime.date(2025, 1, 20)))
+        hoje = datetime.date.today()
+        periodo_selecionado = st.date_input(
+            "Data",
+            value=(hoje - datetime.timedelta(days=5), hoje)
+        )
         start_date, end_date = (periodo_selecionado if isinstance(periodo_selecionado, tuple) 
                               else (periodo_selecionado, periodo_selecionado))
     
@@ -101,6 +109,7 @@ def main():
     if st.button("Gerar Gráficos"):
         df = carregar_dados(start_date, end_date, dado_selecionado, tipo_transacao)
         exibir_graficos(df)
+
 
 if __name__ == "__main__":
     main()
