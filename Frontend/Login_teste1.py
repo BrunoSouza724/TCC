@@ -1,0 +1,130 @@
+import streamlit as st
+import app
+
+# Banco de usuários
+user_db = {"admin": "1234"}  
+
+# Verificação de login
+def verificar_login(username, password):
+    return user_db.get(username) == password
+
+# Tema customizado com layout estilo dividido
+def aplicar_estilo():
+    st.markdown("""
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        .login-container {
+            display: flex;
+            height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .left-panel {
+            background-color: #2E8B57;
+            color: white;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+        .left-panel h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .right-panel {
+            background-color: white;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 50px;
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .login-box {
+            max-width: 900px;
+            margin: auto;
+            display: flex;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .stTextInput>div>div>input, .stPassword>div>div>input {
+            border: 1px solid #2E8B57 !important;
+            border-radius: 5px !important;
+        }
+        .stButton>button {
+            background-color: #2E8B57;
+            color: white;
+            font-weight: bold;
+            border-radius: 5px;
+            width: 100%;
+        }
+        h2 {
+            color: #2E8B57;
+            margin-bottom: 20px;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Tela de login
+def tela_login():
+    aplicar_estilo()
+    st.markdown('<div class="login-box">', unsafe_allow_html=True)
+
+    # Parte esquerda
+    st.markdown('''
+        <div class="left-panel">
+            <h1>Bem vindo de volta</h1>
+            <p>Estamos felizes em te ver novamente!</p>
+        </div>
+    ''', unsafe_allow_html=True)
+
+    # Parte direita
+    with st.container():
+        st.markdown('<div class="right-panel">', unsafe_allow_html=True)
+        st.markdown("<h2>Login</h2>", unsafe_allow_html=True)
+
+        with st.form("login_form"):
+            username = st.text_input("Usuário", placeholder="Digite seu usuário")
+            password = st.text_input("Senha", type="password", placeholder="Digite sua senha")
+            if st.form_submit_button("Acessar Sistema"):
+                if username and password:
+                    if verificar_login(username, password):
+                        st.session_state.logged_in = True
+                        st.session_state.username = username
+                        st.rerun()
+                    else:
+                        st.error("Credenciais inválidas!")
+                else:
+                    st.warning("Preencha todos os campos!")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# Tela principal
+def tela_principal():
+    with st.sidebar:
+        st.success(f"Bem-vindo, {st.session_state.username}!")
+        if st.button("Sair"):
+            st.session_state.clear()
+            st.rerun()
+    app.main()
+
+# App
+def main():
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+    if st.session_state.logged_in:
+        tela_principal()
+    else:
+        tela_login()
+
+if __name__ == "__main__":
+    main()
