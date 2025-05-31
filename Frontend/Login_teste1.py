@@ -81,8 +81,8 @@ def tela_login():
     # Parte esquerda
     st.markdown('''
         <div class="left-panel">
-            <h1>Bem vindo de volta</h1>
-            <p>Estamos felizes em te ver novamente!</p>
+            <h1>Bem vindo ao FinanManager</h1>
+            <p>Para acessar, insira seu usuário e senha</p>
         </div>
     ''', unsafe_allow_html=True)
 
