@@ -89,7 +89,7 @@ def main():
     st.sidebar.image('Logo.png')
     st.sidebar.title('Seja-Bem Vindo ao Controle Financeiro :heavy_dollar_sign:')
     
-    st.title(":moneybag: Resumo Financeiro")
+    st.title(":bar_chart: Gráficos")
     
     # Filtros
     data, descricao, entrada_saida = st.columns(3)
