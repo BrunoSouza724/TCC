@@ -1,0 +1,134 @@
+import streamlit as st
+import pandas as pd
+import datetime
+import sqlite3
+
+def conectar_banco():
+    return sqlite3.connect('Lancamentos.db')
+
+def excluir_lancamento(lancamento_id):
+    try:
+        conn = conectar_banco()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM Lancamentos WHERE id = ?", (lancamento_id,))
+        conn.commit()
+        st.success(f"Lançamento {lancamento_id} removido com sucesso.")
+    except Exception as e:
+        st.error(f"Erro ao excluir lançamento: {e}")
+    finally:
+        conn.close()
+
+def main():
+    st.sidebar.image('Logo.png')
+    st.sidebar.title('Seja-Bem Vindo ao Controle Financeiro :heavy_dollar_sign:')
+
+    st.title(":page_facing_up: Relatórios Financeiros")
+
+    if "modo_edicao" not in st.session_state:
+        st.session_state.modo_edicao = False
+    if "df_resultado" not in st.session_state:
+        st.session_state.df_resultado = pd.DataFrame()
+
+    data, descricao, entrada_saida = st.columns(3)
+
+    with data:
+        periodo_selecionado = st.date_input(
+            "Data",
+            value=(datetime.date(2025, 1, 1), datetime.date(2025, 1, 20))
+        )
+        if isinstance(periodo_selecionado, tuple) and len(periodo_selecionado) == 2:
+            start_date, end_date = periodo_selecionado
+        else:
+            start_date = periodo_selecionado
+            end_date = periodo_selecionado
+
+    with descricao:
+        conn = conectar_banco()
+        try:
+            df_descricoes = pd.read_sql_query("SELECT DISTINCT Descricao FROM Lancamentos", conn)
+            opcoes_dados = ["Todos"] + df_descricoes["Descricao"].tolist() if not df_descricoes.empty else ["Nenhuma opção disponível"]
+        except Exception as e:
+            st.error(f"Erro ao obter descrições: {e}")
+            opcoes_dados = ["Erro ao carregar"]
+        finally:
+            conn.close()
+
+        dado_selecionado = st.selectbox("Selecione a Descrição", opcoes_dados)
+
+    with entrada_saida:
+        tipo_transacao = st.radio("Entrada, Saída ou Ambas", ("Entrada", "Saída", "Ambas"))
+
+    if st.button("Buscar Dados"):
+        if dado_selecionado == "Todos":
+            descricao_filter = ""
+        else:
+            descricao_filter = f"AND Descricao = '{dado_selecionado}'"
+
+        if tipo_transacao == "Ambas":
+            query = f"""
+                SELECT id, Tipo, Data, Descricao, Valor, Metodo
+                FROM Lancamentos
+                WHERE Data BETWEEN '{start_date}' AND '{end_date}'
+                {descricao_filter}
+            """
+        else:
+            query = f"""
+                SELECT id, Tipo, Data, Descricao, Valor, Metodo
+                FROM Lancamentos
+                WHERE Data BETWEEN '{start_date}' AND '{end_date}'
+                {descricao_filter}
+                AND Tipo = '{tipo_transacao}'
+            """
+
+        conn = conectar_banco()
+        try:
+            df = pd.read_sql_query(query, conn)
+        except Exception as e:
+            st.error(f"Erro na consulta: {e}")
+            df = pd.DataFrame()
+        finally:
+            conn.close()
+
+        if not df.empty:
+            st.session_state.df_resultado = df
+        else:
+            st.info("Nenhum dado retornado ou erro na consulta.")
+            st.session_state.df_resultado = pd.DataFrame()
+
+    if not st.session_state.df_resultado.empty:
+        col_titulo, col_botao = st.columns([7, 2])
+        with col_titulo:
+            st.subheader("Resultados da Consulta")
+        with col_botao:
+            if not st.session_state.modo_edicao:
+                if st.button("✏️ Editar"):
+                    st.session_state.modo_edicao = True
+                    st.rerun()
+            else:
+                if st.button("🔙 Voltar"):
+                    st.session_state.modo_edicao = False
+                    st.rerun()
+
+        if not st.session_state.modo_edicao:
+            # Remove a coluna 'id' da visualização antes de mostrar o dataframe
+            st.dataframe(st.session_state.df_resultado.drop(columns=["id"]))
+
+    if st.session_state.modo_edicao:
+        st.subheader("Editar Lançamentos")
+        for index, row in st.session_state.df_resultado.iterrows():
+            with st.container():
+                col1, col2 = st.columns([10, 1])
+                with col1:
+                    st.markdown(
+                        # Não exibe o ID na linha, apenas os demais campos
+                        f"**Tipo:** {row['Tipo']} | **Data:** {row['Data']} | "
+                        f"**Descrição:** {row['Descricao']} | **Valor:** R$ {row['Valor']:.2f} | **Método:** {row['Metodo']}"
+                    )
+                with col2:
+                    if st.button("🗑️", key=f"remover_{row['id']}"):
+                        excluir_lancamento(row['id'])
+                        st.session_state.df_resultado = st.session_state.df_resultado[st.session_state.df_resultado['id'] != row['id']]
+                        st.rerun()
+
+if __name__ == "__main__":
+    main()
