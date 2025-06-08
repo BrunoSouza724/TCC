@@ -31,53 +31,56 @@ def carregar_dados(start_date, end_date, descricao, tipo_transacao):
     return df
 
 def calcular_saldo_acumulado(df):
+    # Criar uma cópia para não modificar o DataFrame original
     df_saldo = df.copy()
+    
+    # Converter valores de saída para negativos
     df_saldo['Valor'] = df_saldo.apply(
         lambda row: -row['Valor'] if row['Tipo'] == 'Saída' else row['Valor'], 
         axis=1
     )
+    
+    # Calcular o saldo acumulado por data
     df_saldo = df_saldo.groupby('Data', as_index=False).agg({'Valor': 'sum'})
     df_saldo['Saldo Acumulado'] = df_saldo['Valor'].cumsum()
+    
     return df_saldo
 
 def exibir_graficos(df):
     if not df.empty:
         df['Data'] = pd.to_datetime(df['Data'])
         
-        # Gráfico de barras - Valor por Descrição com cores distintas
+        # Gráfico de barras - Valor por Descrição (com cor personalizada por tipo)
         fig_bar = px.bar(
-            df,
-            x='Descricao',
-            y='Valor',
-            color='Tipo',
+            df, 
+            x='Descricao', 
+            y='Valor', 
+            color='Tipo', 
             title="Valor por Descrição",
             color_discrete_map={
-                "Entrada": "#2E8B57",  # Verde
-                "Saída": "#B22222"    # Vermelho
+                "Entrada": "#2E8B57",  # verde
+                "Saída": "#B22222"     # vermelho escuro
             }
         )
-        # Ajuste de escala no eixo Y: de 0 a 200 de 10 em 10
-        fig_bar.update_yaxes(dtick=10, range=[0, 80])
-
         st.plotly_chart(fig_bar)
         
-        # Gráfico de linha - Evolução Financeira
+        # Gráfico de linha - Evolução Financeira (saldo acumulado)
         df_saldo = calcular_saldo_acumulado(df)
         fig_line = px.line(
-            df_saldo,
-            x='Data',
-            y='Saldo Acumulado',
-            markers=True,
+            df_saldo, 
+            x='Data', 
+            y='Saldo Acumulado', 
+            markers=True, 
             title="Evolução do Saldo Financeiro",
             labels={'Saldo Acumulado': 'Saldo (R$)'},
             line_shape="linear"
         )
+        
+        # Linha horizontal no zero
         fig_line.add_hline(y=0, line_dash="dash", line_color="red")
+        
+        # Cor da linha do saldo acumulado
         fig_line.update_traces(line=dict(color="#2E8B57"))
-
-        # Ajuste de escala no eixo Y: de 0 a 200 de 10 em 10
-        fig_line.update_yaxes(dtick=10, range=[0, 80])
-
         st.plotly_chart(fig_line)
     else:
         st.info("Nenhum dado disponível para os filtros selecionados.")
@@ -86,21 +89,24 @@ def main():
     st.sidebar.image('Logo.png')
     st.sidebar.title('Seja-Bem Vindo ao Controle Financeiro :heavy_dollar_sign:')
     
-    st.title(":bar_chart: Gráficos")
+    st.title(":moneybag: Resumo Financeiro")
     
+    # Filtros
     data, descricao, entrada_saida = st.columns(3)
     
     with data:
         hoje = datetime.date.today()
         periodo_selecionado = st.date_input(
-            "Data",
+            "Período",
             value=(hoje - datetime.timedelta(days=5), hoje)
         )
+
+        # Verificar se o usuário selecionou um intervalo ou uma data única
         if isinstance(periodo_selecionado, tuple) and len(periodo_selecionado) == 2:
             start_date, end_date = periodo_selecionado
         else:
             start_date = end_date = periodo_selecionado
-    
+
     with descricao:
         conn = conectar_banco()
         try:
@@ -111,6 +117,7 @@ def main():
             opcoes_dados = ["Erro ao carregar"]
         finally:
             conn.close()
+        
         dado_selecionado = st.selectbox("Selecione a Descrição", opcoes_dados)
     
     with entrada_saida:
