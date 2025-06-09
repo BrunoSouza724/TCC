@@ -31,40 +31,45 @@ def carregar_dados(start_date, end_date, descricao, tipo_transacao):
     return df
 
 def calcular_saldo_acumulado(df):
-    # Criar uma cópia para não modificar o DataFrame original
     df_saldo = df.copy()
-    
-    # Converter valores de saída para negativos
     df_saldo['Valor'] = df_saldo.apply(
         lambda row: -row['Valor'] if row['Tipo'] == 'Saída' else row['Valor'], 
         axis=1
     )
-    
-    # Calcular o saldo acumulado por data
     df_saldo = df_saldo.groupby('Data', as_index=False).agg({'Valor': 'sum'})
     df_saldo['Saldo Acumulado'] = df_saldo['Valor'].cumsum()
-    
     return df_saldo
 
 def exibir_graficos(df):
     if not df.empty:
         df['Data'] = pd.to_datetime(df['Data'])
-        
-        # Gráfico de barras - Valor por Descrição (com cor personalizada por tipo)
+
+        # Gráfico de barras - Valor por Descrição (cores personalizadas e valores)
         fig_bar = px.bar(
             df, 
             x='Descricao', 
             y='Valor', 
             color='Tipo', 
             title="Valor por Descrição",
+            text='Valor',  # Exibir o valor na barra
             color_discrete_map={
                 "Entrada": "#2E8B57",  # verde
                 "Saída": "#B22222"     # vermelho escuro
             }
         )
+        # Formatação do texto nas barras
+        fig_bar.update_traces(
+            texttemplate='%{text:.2f}',
+            textposition='outside'
+        )
+        # Ajuste layout para legibilidade
+        fig_bar.update_layout(
+            uniformtext_minsize=8,
+            uniformtext_mode='hide'
+        )
         st.plotly_chart(fig_bar)
-        
-        # Gráfico de linha - Evolução Financeira (saldo acumulado)
+
+        # Gráfico de linha - Evolução do Saldo Acumulado
         df_saldo = calcular_saldo_acumulado(df)
         fig_line = px.line(
             df_saldo, 
@@ -75,11 +80,9 @@ def exibir_graficos(df):
             labels={'Saldo Acumulado': 'Saldo (R$)'},
             line_shape="linear"
         )
-        
         # Linha horizontal no zero
         fig_line.add_hline(y=0, line_dash="dash", line_color="red")
-        
-        # Cor da linha do saldo acumulado
+        # Cor da linha
         fig_line.update_traces(line=dict(color="#2E8B57"))
         st.plotly_chart(fig_line)
     else:
@@ -88,20 +91,18 @@ def exibir_graficos(df):
 def main():
     st.sidebar.image('Logo.png')
     st.sidebar.title('Seja-Bem Vindo ao Controle Financeiro :heavy_dollar_sign:')
-    
+
     st.title(":bar_chart: Gráficos")
-    
+
     # Filtros
     data, descricao, entrada_saida = st.columns(3)
-    
+
     with data:
         hoje = datetime.date.today()
         periodo_selecionado = st.date_input(
             "Período",
             value=(hoje - datetime.timedelta(days=5), hoje)
         )
-
-        # Verificar se o usuário selecionou um intervalo ou uma data única
         if isinstance(periodo_selecionado, tuple) and len(periodo_selecionado) == 2:
             start_date, end_date = periodo_selecionado
         else:
@@ -117,12 +118,12 @@ def main():
             opcoes_dados = ["Erro ao carregar"]
         finally:
             conn.close()
-        
+
         dado_selecionado = st.selectbox("Selecione a Descrição", opcoes_dados)
-    
+
     with entrada_saida:
         tipo_transacao = st.radio("Tipo de Transação", ("Entrada", "Saída", "Ambas"))
-    
+
     if st.button("Gerar Gráficos"):
         df = carregar_dados(start_date, end_date, dado_selecionado, tipo_transacao)
         exibir_graficos(df)
