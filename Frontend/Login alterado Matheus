@@ -89,7 +89,7 @@ def tela_login():
     # Parte direita
     with st.container():
         st.markdown('<div class="right-panel">', unsafe_allow_html=True)
-        st.markdown("<h2>Login</h2>", unsafe_allow_html=True)
+        #st.markdown("<h2>Login</h2>", unsafe_allow_html=True)
 
         with st.form("login_form"):
             username = st.text_input("Usuário", placeholder="Digite seu usuário")
