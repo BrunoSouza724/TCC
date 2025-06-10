@@ -14,7 +14,7 @@ def carregar_dados(start_date, end_date, descricao, tipo_transacao):
         tipo_filter = "" if tipo_transacao == "Ambas" else f"AND Tipo = '{tipo_transacao}'"
 
         query = f"""
-            SELECT Data, Descricao, Valor, Tipo
+            SELECT Data, Descricao, Quantidade, Valor, (Quantidade * Valor) as ValorTotal, Tipo
             FROM Lancamentos
             WHERE Data BETWEEN '{start_date}' AND '{end_date}'
             {descricao_filter} {tipo_filter}
@@ -32,37 +32,35 @@ def carregar_dados(start_date, end_date, descricao, tipo_transacao):
 
 def calcular_saldo_acumulado(df):
     df_saldo = df.copy()
-    df_saldo['Valor'] = df_saldo.apply(
-        lambda row: -row['Valor'] if row['Tipo'] == 'Saída' else row['Valor'], 
+    df_saldo['ValorTotal'] = df_saldo.apply(
+        lambda row: -row['ValorTotal'] if row['Tipo'] == 'Saída' else row['ValorTotal'], 
         axis=1
     )
-    df_saldo = df_saldo.groupby('Data', as_index=False).agg({'Valor': 'sum'})
-    df_saldo['Saldo Acumulado'] = df_saldo['Valor'].cumsum()
+    df_saldo = df_saldo.groupby('Data', as_index=False).agg({'ValorTotal': 'sum'})
+    df_saldo['Saldo Acumulado'] = df_saldo['ValorTotal'].cumsum()
     return df_saldo
 
 def exibir_graficos(df):
     if not df.empty:
         df['Data'] = pd.to_datetime(df['Data'])
 
-        # Gráfico de barras - Valor por Descrição (cores personalizadas e valores)
+        # Gráfico de barras - Valor Total por Descrição
         fig_bar = px.bar(
             df, 
             x='Descricao', 
-            y='Valor', 
+            y='ValorTotal', 
             color='Tipo', 
-            title="Valor por Descrição",
-            text='Valor',  # Exibir o valor na barra
+            title="Valor Total por Descrição",
+            text='ValorTotal',
             color_discrete_map={
-                "Entrada": "#2E8B57",  # verde
-                "Saída": "#B22222"     # vermelho escuro
+                "Entrada": "#2E8B57",
+                "Saída": "#B22222"
             }
         )
-        # Formatação do texto nas barras
         fig_bar.update_traces(
             texttemplate='%{text:.2f}',
             textposition='outside'
         )
-        # Ajuste layout para legibilidade
         fig_bar.update_layout(
             uniformtext_minsize=8,
             uniformtext_mode='hide'
@@ -80,9 +78,7 @@ def exibir_graficos(df):
             labels={'Saldo Acumulado': 'Saldo (R$)'},
             line_shape="linear"
         )
-        # Linha horizontal no zero
         fig_line.add_hline(y=0, line_dash="dash", line_color="red")
-        # Cor da linha
         fig_line.update_traces(line=dict(color="#2E8B57"))
         st.plotly_chart(fig_line)
     else:
