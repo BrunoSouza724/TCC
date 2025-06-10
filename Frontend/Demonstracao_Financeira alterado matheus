@@ -18,15 +18,15 @@ def excluir_lancamento(lancamento_id):
     finally:
         conn.close()
 
-def atualizar_valor_lancamento(lancamento_id, novo_valor):
+def atualizar_lancamento(lancamento_id, novo_valor, nova_quantidade):
     try:
         conn = conectar_banco()
         cursor = conn.cursor()
-        cursor.execute("UPDATE Lancamentos SET Valor = ? WHERE id = ?", (novo_valor, lancamento_id))
+        cursor.execute("UPDATE Lancamentos SET Valor = ?, Quantidade = ? WHERE id = ?", (novo_valor, nova_quantidade, lancamento_id))
         conn.commit()
-        st.success(f"Valor do lançamento {lancamento_id} atualizado para R$ {novo_valor:.2f}")
+        st.success(f"Lançamento {lancamento_id} atualizado.")
     except Exception as e:
-        st.error(f"Erro ao atualizar valor: {e}")
+        st.error(f"Erro ao atualizar: {e}")
     finally:
         conn.close()
 
@@ -38,14 +38,14 @@ def buscar_dados(start_date, end_date, dado_selecionado, tipo_transacao):
 
     if tipo_transacao == "Ambas":
         query = f"""
-            SELECT id, Tipo, Data, Descricao, Valor, Metodo
+            SELECT id, Tipo, Data, Descricao, Quantidade, Valor, (Quantidade * Valor) as ValorTotal, Metodo
             FROM Lancamentos
             WHERE Data BETWEEN '{start_date}' AND '{end_date}'
             {descricao_filter}
         """
     else:
         query = f"""
-            SELECT id, Tipo, Data, Descricao, Valor, Metodo
+            SELECT id, Tipo, Data, Descricao, Quantidade, Valor, (Quantidade * Valor) as ValorTotal, Metodo
             FROM Lancamentos
             WHERE Data BETWEEN '{start_date}' AND '{end_date}'
             {descricao_filter}
@@ -77,6 +77,8 @@ def main():
         st.session_state.confirmacoes = {}
     if "novos_valores" not in st.session_state:
         st.session_state.novos_valores = {}
+    if "novas_quantidades" not in st.session_state:
+        st.session_state.novas_quantidades = {}
 
     data, descricao, entrada_saida = st.columns(3)
 
@@ -112,6 +114,7 @@ def main():
         if not df.empty:
             st.session_state.df_resultado = df
             st.session_state.novos_valores = {}
+            st.session_state.novas_quantidades = {}
         else:
             st.info("Nenhum dado retornado ou erro na consulta.")
             st.session_state.df_resultado = pd.DataFrame()
@@ -134,23 +137,38 @@ def main():
 
         if not st.session_state.modo_edicao:
             df_mostrar = st.session_state.df_resultado.copy()
-            df_mostrar = df_mostrar[["Descricao", "Tipo", "Data", "Valor", "Metodo"]]
-            df_mostrar.reset_index(drop=True, inplace=True)  # Remove índice para não aparecer
+            df_mostrar = df_mostrar[["Descricao", "Tipo", "Data", "Quantidade", "Valor", "ValorTotal", "Metodo"]]
+            df_mostrar.rename(columns={
+                "Descricao": "Descrição",
+                "Tipo": "Tipo",
+                "Data": "Data",
+                "Quantidade": "Quantidade",
+                "Valor": "Valor Unitário",
+                "ValorTotal": "Valor Total",
+                "Metodo": "Método"
+            }, inplace=True)
+            df_mostrar.reset_index(drop=True, inplace=True)
             st.dataframe(df_mostrar)
 
     if st.session_state.modo_edicao:
         st.subheader("Editar Lançamentos")
         for index, row in st.session_state.df_resultado.iterrows():
             with st.container():
-                col1, col2, col3 = st.columns([6, 2, 1])
+                col1, col2, col3, col4 = st.columns([5, 2, 2, 1])
                 with col1:
                     st.markdown(
                         f"**Descrição:** {row['Descricao']} | **Tipo:** {row['Tipo']} | "
                         f"**Data:** {row['Data']} | **Método:** {row['Metodo']}"
                     )
-                with col2:
+                with col2:  # Quantidade antes
+                    quantidade_valor = int(row['Quantidade']) if pd.notna(row['Quantidade']) else 0
+                    quantidade = st.number_input(
+                        "Quantidade", min_value=0, step=1, value=quantidade_valor, key=f"quant_{row['id']}"
+                    )
+                    st.session_state.novas_quantidades[row['id']] = quantidade
+                with col3:  # Valor unitário depois
                     novo_valor_str = st.text_input(
-                        "Valor (R$)", 
+                        "Valor Unitário (R$)", 
                         value=f"{float(row['Valor']):.2f}", 
                         key=f"valor_{row['id']}"
                     )
@@ -159,11 +177,14 @@ def main():
                     except ValueError:
                         novo_valor = float(row['Valor'])
                     st.session_state.novos_valores[row['id']] = novo_valor
-                with col3:
+                with col4:
                     if not st.session_state.confirmacoes.get(row['id'], False):
                         if st.button("🗑️", key=f"remover_{row['id']}"):
                             st.session_state.confirmacoes[row['id']] = True
                             st.rerun()
+
+            valor_total = st.session_state.novos_valores[row['id']] * st.session_state.novas_quantidades[row['id']]
+            st.write(f"**Valor Total:** R$ {valor_total:.2f}")
 
             if st.session_state.confirmacoes.get(row['id'], False):
                 confirm_col1, confirm_col2, confirm_col3 = st.columns([0.3, 0.2, 0.2])
@@ -183,9 +204,13 @@ def main():
                         st.rerun()
 
         if st.button("💾 Salvar Alterações"):
-            for lancamento_id, novo_valor in st.session_state.novos_valores.items():
-                atualizar_valor_lancamento(lancamento_id, novo_valor)
-            st.success("Todos os valores atualizados com sucesso.")
+            for lancamento_id in st.session_state.novos_valores.keys():
+                atualizar_lancamento(
+                    lancamento_id,
+                    st.session_state.novos_valores[lancamento_id],
+                    st.session_state.novas_quantidades[lancamento_id]
+                )
+            st.success("Todos os lançamentos atualizados com sucesso.")
             st.session_state.modo_edicao = False
             df_atualizado = buscar_dados(start_date, end_date, dado_selecionado, tipo_transacao)
             st.session_state.df_resultado = df_atualizado
@@ -193,4 +218,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
