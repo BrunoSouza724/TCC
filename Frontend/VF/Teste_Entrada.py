@@ -1,0 +1,140 @@
+import streamlit as st
+import sqlite3
+
+# Conexão com o banco de dados
+
+
+def conectar_banco():
+    con = sqlite3.connect('Lancamentos.db')
+    cursor = con.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS Produtos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL
+        )
+    ''')
+    con.commit()
+    return con
+
+# Lista de produtos cadastrados no banco
+
+
+def listar_produtos():
+    con = conectar_banco()
+    cursor = con.cursor()
+    cursor.execute("SELECT nome FROM Produtos")
+    produtos = [row[0] for row in cursor.fetchall()]
+    con.close()
+    return produtos
+
+
+def Teste_Entrada():
+    st.title(':credit_card: Entrada e Saída')
+
+    if "formulario_visivel" not in st.session_state:
+        st.session_state.formulario_visivel = True
+    if "salvo" not in st.session_state:
+        st.session_state.salvo = False
+    if "dados_transacao" not in st.session_state:
+        st.session_state.dados_transacao = {}
+    if "tela_atual" not in st.session_state:
+        st.session_state.tela_atual = "entrada_saida"
+
+    def salvar_transacao():
+        dados = st.session_state.dados_transacao
+        if not dados.get("descricao"):
+            st.error("Selecione uma descrição.")
+            return
+        if dados.get("valor_unitario", 0) <= 0:
+            st.error("O valor unitário deve ser positivo.")
+            return
+        if dados.get("quantidade", 0) <= 0:
+            st.error("A quantidade deve ser positiva.")
+            return
+
+        try:
+            con = conectar_banco()
+            cursor = con.cursor()
+            cursor.execute(
+                '''INSERT INTO Lancamentos (Tipo, Data, Descricao, Valor, Metodo, Quantidade)
+                VALUES (?, ?, ?, ?, ?, ?)''',
+                (
+                    dados["tipo"],
+                    str(dados["data"]),
+                    dados["descricao"],
+                    dados["valor_unitario"],
+                    dados["metodo"],
+                    dados["quantidade"]
+                )
+            )
+            con.commit()
+            st.success("Transação salva com sucesso!")
+        except sqlite3.Error as e:
+            st.error(f"Erro ao salvar: {e}")
+        finally:
+            con.close()
+
+        st.session_state.formulario_visivel = False
+        st.session_state.salvo = True
+
+    def nova_transacao():
+        st.session_state.formulario_visivel = True
+        st.session_state.salvo = False
+        st.session_state.dados_transacao = {}
+
+    st.sidebar.image('Logo.png')
+    st.sidebar.title(
+        'Seja-Bem Vindo ao Controle Financeiro :heavy_dollar_sign:')
+
+    if st.session_state.tela_atual == "entrada_saida":
+        if st.session_state.formulario_visivel:
+            st.session_state.dados_transacao["tipo"] = st.radio(
+                "Tipo de transação:", ["Entrada", "Saída"], horizontal=True, key="tipo"
+            )
+            st.session_state.dados_transacao["data"] = st.date_input(
+                "Data da transação:", key="data"
+            )
+
+            # Carrega produtos cadastrados
+            produtos = listar_produtos()
+
+            if not produtos:
+                st.warning(
+                    "Nenhum produto cadastrado. Cadastre um produto primeiro.")
+            st.session_state.dados_transacao["descricao"] = st.selectbox(
+                "Descrição:", produtos if produtos else [""], key="descricao"
+            )
+
+            st.session_state.dados_transacao["valor_unitario"] = st.number_input(
+                "Valor Unitário (R$):", min_value=0.0, step=0.01, format="%.2f", key="valor_unitario"
+            )
+            st.session_state.dados_transacao["quantidade"] = st.number_input(
+                "Quantidade:", min_value=0, step=1, key="quantidade"
+            )
+
+            # Valor total calculado automaticamente
+            valor_total = (
+                st.session_state.dados_transacao["valor_unitario"]
+                * st.session_state.dados_transacao["quantidade"]
+            )
+            st.write(f"**Valor Total (R$):** {valor_total:.2f}")
+
+            st.session_state.dados_transacao["metodo"] = st.selectbox(
+                "Método de pagamento:", ["Dinheiro", "Cartão de Crédito", "Cartão de Débito"], key="metodo"
+            )
+
+            st.button("Salvar", on_click=salvar_transacao)
+
+        if st.session_state.salvo and not st.session_state.formulario_visivel:
+            dados = st.session_state.dados_transacao
+            valor_total = dados['valor_unitario'] * dados['quantidade']
+            st.write("### Resumo da Transação")
+            st.write(f"**Tipo:** {dados['tipo']}")
+            st.write(f"**Data:** {dados['data']}")
+            st.write(f"**Descrição:** {dados['descricao']}")
+            st.write(f"**Valor Unitário:** R$ {dados['valor_unitario']:.2f}")
+            st.write(f"**Quantidade:** {dados['quantidade']}")
+            st.write(f"**Valor Total:** R$ {valor_total:.2f}")
+            st.write(f"**Método:** {dados['metodo']}")
+
+            st.button("Nova Transação", on_click=nova_transacao)

@@ -1,0 +1,128 @@
+import streamlit as st
+from Teste_Entrada import Teste_Entrada
+from Demonstracao_Financeira import main as demonstracao_financeira_main
+from Dashboard import main as dashboard_main
+from Cadastro_Produto import Cadastro_Produto
+
+
+def configurar_estilo():
+    st.markdown("""
+        <style>
+            [data-testid="stSidebar"] {
+                background-color: #f0f0f0 !important;
+            }
+            .stApp,
+            .block-container,
+            .css-1d391kg,
+            .css-12oz5g7 {
+                background-color: white !important;
+            }
+            .block-container {
+                min-height: 100vh;
+                padding-top: 180px !important;
+                padding-bottom: 2rem;
+            }
+            .top-bar {
+                background-color: #2E8B57;
+                height: 160px;
+                display: flex;
+                justify-content: center;
+                padding-top: 85px;
+                color: white;
+                font-size: 40px;
+                font-weight: 700;
+                border-bottom: 3px solid #276849;
+                position: fixed;
+                top: 0;
+                left: 280px;
+                width: calc(100% - 280px);
+                z-index: 1000;
+                white-space: nowrap;
+                overflow: visible;
+                margin: 0;
+                padding-bottom: 0;
+                line-height: normal;
+            }
+            .top-bar > * {
+                margin: 0;
+                padding: 0;
+            }
+            .stButton button {
+                background-color: #2E8B57;
+                color: white;
+                border-radius: 8px;
+                padding: 0.75rem 2rem;
+                font-size: 16px;
+                border: none;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+                width: 100%;
+            }
+            .stButton button:hover {
+                background-color: #276849;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+
+def configurar_estilo_menu():
+    st.markdown("""
+        <style>
+            div[data-testid="stButton"] {
+                width: 240px;
+                margin-bottom: 12px;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+
+def main():
+    configurar_estilo()
+
+    if "tela_atual" not in st.session_state:
+        st.session_state.tela_atual = "menu"
+
+    if st.session_state.tela_atual == "menu":
+        configurar_estilo_menu()  # CSS extra só no menu principal
+
+        st.sidebar.image('Logo.png')
+        st.sidebar.title(
+            'Seja-Bem Vindo ao Controle Financeiro :heavy_dollar_sign:')
+
+        st.markdown('<div class="top-bar">Menu Principal</div>',
+                    unsafe_allow_html=True)
+        st.write("")
+        st.write("")
+
+        st.button('📝 Cadastro de Produtos',
+                  on_click=lambda: mudar_tela("cadastro_produto"))
+        st.button(':credit_card: Entrada e Saída',
+                  on_click=lambda: mudar_tela("entrada_saida"))
+        st.button(':page_facing_up: Relatórios',
+                  on_click=lambda: mudar_tela("demonstracao_financeira"))
+        st.button(':bar_chart: Gráficos',
+                  on_click=lambda: mudar_tela("dashboard"))
+
+    elif st.session_state.tela_atual == "cadastro_produto":
+        Cadastro_Produto()
+        st.button("Voltar para o menu", on_click=lambda: mudar_tela("menu"))
+
+    elif st.session_state.tela_atual == "entrada_saida":
+        Teste_Entrada()
+        st.button("Voltar para o menu", on_click=lambda: mudar_tela("menu"))
+
+    elif st.session_state.tela_atual == "demonstracao_financeira":
+        demonstracao_financeira_main()
+        st.button("Voltar para o menu", on_click=lambda: mudar_tela("menu"))
+
+    elif st.session_state.tela_atual == "dashboard":
+        dashboard_main()
+        st.button("Voltar para o menu", on_click=lambda: mudar_tela("menu"))
+
+
+def mudar_tela(tela):
+    st.session_state.tela_atual = tela
+
+
+if __name__ == "__main__":
+    main()
